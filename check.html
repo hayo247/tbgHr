@@ -5,68 +5,132 @@
         <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
         <title>출석체크</title>
     </head>
-    <body>
+    <style>
+        @font-face {
+            font-family: 'MinSans-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2201-2@1.0/MinSans-Regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'MinSans-Regular';
+        }
+
+        ul li{
+            margin: 1rem 0;
+        }
+        
+        ul li button{
+            width: 60dvw;
+            height: 60dvw;
+            font-size: 10dvw;
+            border-radius: 50%;
+        }
+
+        .bg{
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+        }
+
+        .dim{
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            background: #000;
+            opacity: 0.3;
+        }
+
+        .loader {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+        }
+    </style>
+    <body style="background: #002c3f; margin: 0;">
         <form name="frm" onsubmit="return false;">
             <input id="ymd"  name="ymd" type="hidden">
             <input id="time" name="time" type="hidden">
             <input id="sts"  name="sts" type="hidden">
-            <input id="name" name="name" type="text">
-            <button name="btnChk" data-sts="출근">출근</button>    
-            <button name="btnChk" data-sts="퇴근">퇴근</button>    
+            <div style="display: flex; background: #fff; padding: 0.5rem">
+                <img src = "img/logo_F.png" style="height: 2rem;"> 
+                <label style="font-size: 1rem; margin: auto 1rem;">  출퇴근 기록</label>
+            </div>
+            <ul style="list-style-type: none; width: 100%; text-align: center; padding: 0; margin: 2rem 0;" >
+                <li style="font-size: 1.5rem; color: #fff;">
+                    <label style="width: 20%;">성명 : </label>
+                    <input id="name" name="name" type="text" style="font-size: 1.5rem; width: 60%">    
+                </li>    
+                <li>
+                    <p id="ymdFmt" style="font-size: 1.3rem; color: #fff;"></p>
+                </li>
+                <li>
+                    <button name="btnChk" data-sts="출근" style="background: #aac9d7;">출근</button>        
+                </li>
+                <li>
+                    <button name="btnChk" data-sts="퇴근">퇴근</button>        
+                </li>
+                <li>
+                    <p id="stsTxt" style="font-size: 1.3rem; color: #fff;"></p>
+                </li>
+            </ul>
         </form>
-        <p id="sts"></p>
+        <div class="bg" id="loading" style="display: none;">        
+            <div class="dim"></div>
+            <div class="loader" ></div>
+        </div>
     </body>
     <script>
+        
+        $(window).on('load', function() {
+            $("#ymdFmt").text(getDate("YMD"));
 
-        $("[name=btnChk]").on("click", function(){
-            $("#sts").val( $(this).data('sts'));
+            $("[name=btnChk]").on("click", function(){
+                $("#sts").val( $(this).data('sts'));
 
-            // Geolocation API 지원 여부 확인
-            if ("geolocation" in navigator) {
-                const option = {
-                                    enableHighAccuracy: true, // 정확도 우선 모드
-                                    timeout: 10000,           // 10초 이내에 응답 없으면 에러 발생
-                                    maximumAge: 0             // 항상 최신 위치 정보 수집
-                                };
+                if($("#name").val() == ""){
+                    alert("출근자의 성명을 입력해주세요.");
+                    return;
+                }
+                // Geolocation API 지원 여부 확인
+                if ("geolocation" in navigator) {
+                    const option = {
+                                        enableHighAccuracy: true, // 정확도 우선 모드
+                                        timeout: 10000,           // 10초 이내에 응답 없으면 에러 발생
+                                        maximumAge: 0             // 항상 최신 위치 정보 수집
+                                    };
 
-                navigator.geolocation.getCurrentPosition(success, error, option);
-            } else {
-                alert("브라우저가 위치 서비스를 지원하지 않습니다.");
-            }
-        })
-
+                    navigator.geolocation.getCurrentPosition(success, error, option);
+                } else {
+                    alert("브라우저가 위치 서비스를 지원하지 않습니다.");
+                }
+            });
+        });
         
         
         function success(position) {
             const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            
+            const longitude = position.coords.longitude;            
 
             // 위도(Latitude) : 37.641181388318 / 경도(Longitude) : 126.866725902793
             // 위도(Latitude) : 37.6412563960287 / 경도(Longitude) : 126.866607026912
             if(37.6410 < latitude && latitude <37.6413
                 && 126.86665 < Longitude && Longitude < 126.8668){
-
-                    alert("회사에 있군요!!");
-
-                    var now = new Date();
-            
-                    // 날짜 구하기
-                    var year = now.getFullYear();
-                    var month = ('0' + (now.getMonth() + 1)).slice(-2); // 월은 0부터 시작하므로 1을 더해줍니다.
-                    var day = ('0' + now.getDate()).slice(-2);
-                    var dateString = year + '-' + month + '-' + day;
-
-                    // 시간 구하기
-                    var hours = ('0' + now.getHours()).slice(-2);
-                    var minutes = ('0' + now.getMinutes()).slice(-2);
-                    var seconds = ('0' + now.getSeconds()).slice(-2);
-                    var timeString = hours + ':' + minutes + ':' + seconds;
-
-
-                    $("#ymd").val(dateString);
-                    $("#time").val(timeString);
+                    getDate("TIME");
                     var queryString = $("form[name=frm]").serialize() ;
+                    $("#loading").show();
 
                     $.ajax({
                         data : queryString,
@@ -74,15 +138,16 @@
                         url : 'https://script.google.com/macros/s/AKfycbxzLaZauoLsemqth-vjFWZchKC328kcVFzEwM-zd9tx8quShcpHDRCOwq6AwMLqFm2eTA/exec',
                         dataType : 'json',
                         error: function(xhr, status, error){
-                            alert("오류");
+                            alert($("#sts").val() + " 신청이 실패하였습니다. 다시 요청바랍니다.");
+                            $("#loading").hide();
                         },
                         success : function(json){
                             if(json.result == "success"){
-                                $("#sts").text("출석체크가 완료되었습니다.");
-                                alert("출/퇴근 신청 완료");
+                                $("#stsTxt").html($("#time").val() + "<br> " +$("#sts").val() + " 완료되었습니다.");
                             }else{
-                                alert("출/퇴근신청을 못했습니다.");
+                                alert($("#sts").val() + " 신청이 실패하였습니다. 다시 요청바랍니다.");
                             }
+                            $("#loading").hide();
                         }
                     });                    
             }else{
@@ -92,6 +157,30 @@
 
         function error(err) {
             alert("현재 위치를 가져올 수 없음");
+        }
+
+        function getDate(type){
+            var now = new Date();
+
+            if("YMD" == type){
+                // 날짜 구하기
+                var year = now.getFullYear();
+                var month = ('0' + (now.getMonth() + 1)).slice(-2); // 월은 0부터 시작하므로 1을 더해줍니다.
+                var day = ('0' + now.getDate()).slice(-2);
+                var dateString = year + '-' + month + '-' + day;
+
+                $("#ymd").val(dateString);
+                return dateString;
+            }else{
+                // 시간 구하기
+                var hours = ('0' + now.getHours()).slice(-2);
+                var minutes = ('0' + now.getMinutes()).slice(-2);
+                var seconds = ('0' + now.getSeconds()).slice(-2);
+                var timeString = hours + ':' + minutes + ':' + seconds;
+
+                $("#time").val(timeString);
+                return timeString;
+            }
         }
     </script>
 </html>
