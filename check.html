@@ -1,0 +1,97 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <title>출석체크</title>
+    </head>
+    <body>
+        <form name="frm" onsubmit="return false;">
+            <input id="ymd"  name="ymd" type="hidden">
+            <input id="time" name="time" type="hidden">
+            <input id="sts"  name="sts" type="hidden">
+            <input id="name" name="name" type="text">
+            <button name="btnChk" data-sts="출근">출근</button>    
+            <button name="btnChk" data-sts="퇴근">퇴근</button>    
+        </form>
+        <p id="sts"></p>
+    </body>
+    <script>
+
+        $("[name=btnChk]").on("click", function(){
+            $("#sts").val( $(this).data('sts'));
+
+            // Geolocation API 지원 여부 확인
+            if ("geolocation" in navigator) {
+                const option = {
+                                    enableHighAccuracy: true, // 정확도 우선 모드
+                                    timeout: 10000,           // 10초 이내에 응답 없으면 에러 발생
+                                    maximumAge: 0             // 항상 최신 위치 정보 수집
+                                };
+
+                navigator.geolocation.getCurrentPosition(success, error, option);
+            } else {
+                alert("브라우저가 위치 서비스를 지원하지 않습니다.");
+            }
+        })
+
+        
+        
+        function success(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            
+
+            // 위도(Latitude) : 37.641181388318 / 경도(Longitude) : 126.866725902793
+            // 위도(Latitude) : 37.6412563960287 / 경도(Longitude) : 126.866607026912
+            if(37.6410 < latitude && latitude <37.6413
+                && 126.86665 < Longitude && Longitude < 126.8668){
+
+                    alert("회사에 있군요!!");
+
+                    var now = new Date();
+            
+                    // 날짜 구하기
+                    var year = now.getFullYear();
+                    var month = ('0' + (now.getMonth() + 1)).slice(-2); // 월은 0부터 시작하므로 1을 더해줍니다.
+                    var day = ('0' + now.getDate()).slice(-2);
+                    var dateString = year + '-' + month + '-' + day;
+
+                    // 시간 구하기
+                    var hours = ('0' + now.getHours()).slice(-2);
+                    var minutes = ('0' + now.getMinutes()).slice(-2);
+                    var seconds = ('0' + now.getSeconds()).slice(-2);
+                    var timeString = hours + ':' + minutes + ':' + seconds;
+
+
+                    $("#ymd").val(dateString);
+                    $("#time").val(timeString);
+                    var queryString = $("form[name=frm]").serialize() ;
+
+                    $.ajax({
+                        data : queryString,
+                        type : 'post',
+                        url : 'https://script.google.com/macros/s/AKfycbxzLaZauoLsemqth-vjFWZchKC328kcVFzEwM-zd9tx8quShcpHDRCOwq6AwMLqFm2eTA/exec',
+                        dataType : 'json',
+                        error: function(xhr, status, error){
+                            alert("오류");
+                        },
+                        success : function(json){
+                            if(json.result == "success"){
+                                $("#sts").text("출석체크가 완료되었습니다.");
+                                alert("출/퇴근 신청 완료");
+                            }else{
+                                alert("출/퇴근신청을 못했습니다.");
+                            }
+                        }
+                    });                    
+            }else{
+                alert("회사에서만 등록가능해요");
+            }
+        }
+
+        function error(err) {
+            alert("현재 위치를 가져올 수 없음");
+        }
+    </script>
+</html>
