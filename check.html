@@ -126,12 +126,10 @@
 
             // 위도(Latitude) : 37.641181388318 / 경도(Longitude) : 126.866725902793
             // 위도(Latitude) : 37.6412563960287 / 경도(Longitude) : 126.866607026912
-           if(37.6410 < latitude && latitude <37.6413
-                && 126.86665 < longitude && longitude < 126.8669){*/
+           if(37.6410 < latitude && latitude < 37.6413 && 126.86665 < longitude && longitude < 126.8669){
                     getDate("TIME");
                     var queryString = $("form[name=frm]").serialize() ;
                     $("#loading").show();
-            alert(latitude + ", " + longitude)
 
                     $.ajax({
                         data : queryString,
